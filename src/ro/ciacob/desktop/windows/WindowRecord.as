@@ -55,12 +55,14 @@ package ro.ciacob.desktop.windows {
 			_style = style;
 			
 			var hasExplicitTransparency : Boolean = hasStyleSetting (WindowStyle.TRANSPARENT);
+			var usesNativeChrome : Boolean = hasStyleSetting(WindowStyle.NATIVE);
 
 			// We never use the standard/system chrome because it produces windows of
 			// unpredictable size (due to the native chrome being drawn outside our window
 			// content, while there is no reliable way of knowing that chrome's size
 			// ahead of time.
-			_windowBase.systemChrome = NativeWindowSystemChrome.NONE;
+			_windowBase.systemChrome = usesNativeChrome? NativeWindowSystemChrome.STANDARD :
+					NativeWindowSystemChrome.NONE;
 			
 			// Setup window features and type
 			_windowBase.showTitleBar = hasStyleSetting(WindowStyle.HEADER);
@@ -78,10 +80,8 @@ package ro.ciacob.desktop.windows {
 			// "WindowStyle.HEADER", "WindowStyle.FOOTER" or "WindowStyle.RESIZE" styles was 
 			// also set) we will draw an opaque background beneath the content area of the
 			// window. The header and footer area are left transparent, in the idea that
-			// maybe the user wants to use rounded corners for his custom chrome. In a way,
-			// using the Flex chrome forces the window to be transparent, yet the user will
-			// not see that.
-			var mustUseFlexChrome : Boolean = (hasStyleSetting (WindowStyle.HEADER) || 
+			// maybe the user wants to use rounded corners for his custom chrome.
+			var mustUseFlexChrome : Boolean = !usesNativeChrome && (hasStyleSetting (WindowStyle.HEADER) ||
 				hasStyleSetting(WindowStyle.FOOTER) || 
 				hasStyleSetting (WindowStyle.RESIZE));
 			if (mustUseFlexChrome) {
@@ -225,7 +225,7 @@ package ro.ciacob.desktop.windows {
 							return;
 						}
 						var ret:* = callback.apply(context, [_uid]);
-						if (ret === false) {
+						if (!ret) {
 							event.preventDefault();
 						}
 					}
@@ -377,12 +377,12 @@ package ro.ciacob.desktop.windows {
 			_keepMinSizeInScreen = constrainToScreen;
 		}
 
-		internal function setMaximizedPreviousState(uid:String):void {
+		internal function setMaximizedPreviousState():void {
 			_saveState(_displayStatesShortHistory[_displayStatesShortHistory.length - 1], NativeWindowDisplayState.MAXIMIZED);
 		}
 
 
-		internal function setNormalPreviousState(uid:String):void {
+		internal function setNormalPreviousState():void {
 			_saveState(_displayStatesShortHistory[_displayStatesShortHistory.length - 1], NativeWindowDisplayState.NORMAL);
 		}
 
@@ -390,7 +390,7 @@ package ro.ciacob.desktop.windows {
 			_normalStateBounds = bounds;
 			_keepNormalBoundsInScreen = constrainToScreen;
 			if (bounds.width > 0 || bounds.height > 0) {
-				_windowBase.initiallyFitToContent = false;
+				_windowBase._canFitContent = false;
 			}
 		}
 
@@ -620,13 +620,10 @@ package ro.ciacob.desktop.windows {
 					var nWin : NativeWindow = _windowBase.nativeWindow;
 					nWin.x = _normalStateBounds.x;
 					nWin.y = _normalStateBounds.y;
-					var haveValidBounds : Boolean = false;
 					if (requiredW > 0) {
-						haveValidBounds = true;
 						_windowBase.width = requiredW;
 					}
 					if (requiredH > 0) {
-						haveValidBounds = true;
 						_windowBase.height = requiredH;
 					}
 				}
@@ -669,6 +666,12 @@ package ro.ciacob.desktop.windows {
 			}
 		}
 
+		/**
+		 * Blocks "onself", that is, this very WindowRecord instance, together with its _windowBase and related
+		 * NativeWindow. The first child of the _windowBase component will become disabled, and no essential
+		 * operation (e.g., moving, resizing, some state changing) will be available anymore. Also, a WindowRecordEvent
+		 * is dispatched to let the rest of the world know about it.
+		 */
 		private function _blockNow():void {
 			if (_windowBase.numChildren > 0) {
 				var wrapper:DisplayObject = _windowBase.getChildAt(0);
@@ -677,9 +680,11 @@ package ro.ciacob.desktop.windows {
 				}
 			}
 			_windowBase.addEventListener(Event.CLOSING, _onPreventDefault);
-			_windowBase.nativeWindow.addEventListener(NativeWindowDisplayStateEvent.DISPLAY_STATE_CHANGING, _onConditionalPreventDefault);
-			_windowBase.nativeWindow.addEventListener(NativeWindowBoundsEvent.MOVING, _onPreventDefault);
-			_windowBase.nativeWindow.addEventListener(NativeWindowBoundsEvent.RESIZING, _onPreventDefault);
+			var $nw : NativeWindow = _windowBase.nativeWindow;
+			$nw.addEventListener(NativeWindowDisplayStateEvent.DISPLAY_STATE_CHANGING, _onConditionalPreventDefault);
+			$nw.addEventListener(NativeWindowBoundsEvent.MOVING, _onPreventDefault);
+			$nw.addEventListener(NativeWindowBoundsEvent.RESIZING, _onPreventDefault);
+			dispatchEvent(new WindowRecordEvent(WindowRecordEvent.BLOCKING, $nw, _windowBase, _uid));
 		}
 
 		private function _forgetObserver(activity:int, callback:Function):void {
@@ -718,15 +723,17 @@ package ro.ciacob.desktop.windows {
 
 		private function _onNativeWindowInitialized(event:Event):void {
 			_windowBase.removeEventListener(Window.WINDOW_OPEN, _onNativeWindowInitialized);
+			var $nw : NativeWindow = _windowBase.nativeWindow;
 			_isNativeWindowInitialized = true;
+			dispatchEvent(new WindowRecordEvent(WindowRecordEvent.WINDOW_READY, $nw, _windowBase, _uid));
 
 			// It is essential that this listener fires before all the others.
-			_windowBase.nativeWindow.addEventListener(NativeWindowDisplayStateEvent.DISPLAY_STATE_CHANGE, _onDisplayStageChange,
-				false, (int).MAX_VALUE, true);
+			$nw.addEventListener(NativeWindowDisplayStateEvent.DISPLAY_STATE_CHANGE, _onDisplayStageChange,
+				false, int.MAX_VALUE, true);
 
-			_windowBase.nativeWindow.addEventListener(Event.CLOSE, _onWindowClose);
-			_windowBase.nativeWindow.addEventListener(Event.ACTIVATE, _onWindowActivate, false, 0, true);
-			_windowBase.nativeWindow.addEventListener(Event.DEACTIVATE, _onWindowDeactivate, false, 0, true);
+			$nw.addEventListener(Event.CLOSE, _onWindowClose);
+			$nw.addEventListener(Event.ACTIVATE, _onWindowActivate, false, 0, true);
+			$nw.addEventListener(Event.DEACTIVATE, _onWindowDeactivate, false, 0, true);
 			updateWindowBounds();
 			updateMaxSize();
 			updateMinSize();
@@ -833,7 +840,6 @@ package ro.ciacob.desktop.windows {
 
 		private function _trimGivenBoundsToCurrentScreen(bounds:Rectangle):Rectangle {
 			var currentBounds:Rectangle = _windowBase.nativeWindow.bounds;
-			var screens:Array = Screen.screens;
 			var currentScreens:Array = Screen.getScreensForRectangle(currentBounds);
 			var currentScreen:Screen;
 			if (currentScreens.length == 1) {
@@ -856,6 +862,12 @@ package ro.ciacob.desktop.windows {
 			return bounds;
 		}
 
+		/**
+		 * Un-blocks "onself", that is, this very WindowRecord instance, together with its _windowBase and related
+		 * NativeWindow. The first child of the _windowBase component will become enabled again, and so will all window
+		 * essential operations (e.g., moving, resizing, state changing). Also, a WindowRecordEvent is dispatched
+		 * to let the rest of the world know about it.
+		 */
 		private function _unblockNow():void {
 			if (_windowBase.numChildren > 0) {
 				var wrapper:DisplayObject = _windowBase.getChildAt(0);
@@ -864,9 +876,11 @@ package ro.ciacob.desktop.windows {
 				}
 			}
 			_windowBase.removeEventListener(Event.CLOSING, _onPreventDefault);
-			_windowBase.nativeWindow.removeEventListener(NativeWindowDisplayStateEvent.DISPLAY_STATE_CHANGING, _onConditionalPreventDefault);
-			_windowBase.nativeWindow.removeEventListener(NativeWindowBoundsEvent.MOVING, _onPreventDefault);
-			_windowBase.nativeWindow.removeEventListener(NativeWindowBoundsEvent.RESIZING, _onPreventDefault);
+			var $nw : NativeWindow = _windowBase.nativeWindow;
+			$nw.removeEventListener(NativeWindowDisplayStateEvent.DISPLAY_STATE_CHANGING, _onConditionalPreventDefault);
+			$nw.removeEventListener(NativeWindowBoundsEvent.MOVING, _onPreventDefault);
+			$nw.removeEventListener(NativeWindowBoundsEvent.RESIZING, _onPreventDefault);
+			dispatchEvent(new WindowRecordEvent(WindowRecordEvent.UNBLOCKING, $nw, _windowBase, _uid));
 		}
 	}
 }

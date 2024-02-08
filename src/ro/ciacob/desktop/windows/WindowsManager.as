@@ -17,22 +17,19 @@ package ro.ciacob.desktop.windows {
 	public class WindowsManager extends EventDispatcher implements IWindowsManager {
 
 		private static const MAXIMIZE_DELAY:Number = 0.3;
-		
 		private static const UID_LENGTH:int = 8;
-
 		private static const WINDOW_IS_DESTROYED:String = 'Window you attempt to operate on was (already) destroyed.';
-		
 		private static const CANNOT_PARENT_MAIN_WINDOW:String = 'The main window cannot have a parent';
 
 		private static var _creationCounter:int = 0;
+		private var _catalogue:WindowsCatalogue;
+		private var _mainWindow:String;
 
 		public function WindowsManager() {
 			_catalogue = new WindowsCatalogue;
 		}
 
-		private var _parentModalWindow:String;
-		private var _catalogue:WindowsCatalogue;
-		private var _mainWindow:String;
+
 
 		internal function getUidByWindow (window : Window) : String {
 			var availableUids : Vector.<String> = availableWindows;
@@ -162,9 +159,11 @@ package ro.ciacob.desktop.windows {
 			}
 			_catalogue.add (window, uid, style, _creationCounter++);
 			var wRecord : WindowRecord = _catalogue.lookup (uid);
-			
+
 			if (_mainWindow == null) {
 				_mainWindow = uid;
+				wRecord.addEventListener(WindowRecordEvent.BLOCKING, _onMainWindowBlocked);
+				wRecord.addEventListener(WindowRecordEvent.UNBLOCKING, _onMainWindowUnblocked);
 				observeWindowActivity (uid, WindowActivity.DESTROY, _onMainWindowDestroyed, this);
 			} else {
 				
@@ -196,7 +195,7 @@ package ro.ciacob.desktop.windows {
 			window.removeAllChildren();
 			
 			// We also remove the window we are destroying from the list of children of its parent
-			// (assumming it was parented by another window).
+			// (assuming it was parented by another window).
 			var parentUid : String = record.parent;
 			if (parentUid != null) {
 				var parentRecord : WindowRecord = _catalogue.lookup(parentUid);
@@ -349,7 +348,7 @@ package ro.ciacob.desktop.windows {
 				if (isWindowVisible(uid)) {
 					_catalogue.lookup(uid).window.maximize();
 				} else {
-					_catalogue.lookup(uid).setMaximizedPreviousState(uid);
+					_catalogue.lookup(uid).setMaximizedPreviousState();
 				}
 			}
 		}
@@ -357,25 +356,27 @@ package ro.ciacob.desktop.windows {
 		public function showWindow (uid : String) : void {
 			_assertNotDestroyed(uid);
 			var windowRecord : WindowRecord = _catalogue.lookup(uid);
+			var $w : Window = windowRecord.window;
 			if (!windowRecord.isInitialized) {
-				windowRecord.window.open();
+				windowRecord.addEventListener(WindowRecordEvent.WINDOW_READY, _onWindowReady);
+				$w.open();
 			}
 			var previousState:String = windowRecord.previousState;
 			if (windowRecord.isMinimized) {
 				switch (previousState) {
 					case NativeWindowDisplayState.NORMAL:
-						windowRecord.window.restore();
+						$w.restore();
 						Time.delay(MAXIMIZE_DELAY, function():void {
-							windowRecord.window.restore();
+							$w.restore();
 						});
 						break;
 					case NativeWindowDisplayState.MAXIMIZED:
-						windowRecord.window.maximize();
+						$w.maximize();
 						break;
 				}
 			} else if (previousState == NativeWindowDisplayState.MAXIMIZED) {
 				Time.delay(MAXIMIZE_DELAY, function():void {
-					windowRecord.window.maximize();
+					$w.maximize();
 				});
 			}
 		}
@@ -397,7 +398,7 @@ package ro.ciacob.desktop.windows {
 			if (_catalogue.lookup(uid).isMaximized) {
 				_catalogue.lookup(uid).window.nativeWindow.restore();
 			} else {
-				_catalogue.lookup(uid).setNormalPreviousState(uid);
+				_catalogue.lookup(uid).setNormalPreviousState();
 			}
 		}
 
@@ -438,7 +439,7 @@ package ro.ciacob.desktop.windows {
 		}
 
 		public function get visibleWindows():Vector.<String> {
-			var ret:Vector.<String> = Vector.<String>();
+			var ret:Vector.<String> = new Vector.<String>;
 			var availableWindows:Vector.<String> = availableWindows;
 			for (var i:int = 0; i < availableWindows.length; i++) {
 				var uid:String = availableWindows[i];
@@ -447,6 +448,14 @@ package ro.ciacob.desktop.windows {
 				}
 			}
 			return ret;
+		}
+
+		private function _onWindowReady (event : WindowRecordEvent) : void {
+			var windowRecord : WindowRecord = (event.target as WindowRecord);
+			windowRecord.removeEventListener(WindowRecordEvent.WINDOW_READY, _onWindowReady);
+			if (event.windowUid == _mainWindow) {
+				dispatchEvent(new WindowsManagerEvent (WindowsManagerEvent.MAIN_WINDOW_AVAILABLE, event.nativeWindow));
+			}
 		}
 
 		private function _assertNotDestroyed(uid:String):void {
@@ -488,17 +497,28 @@ package ro.ciacob.desktop.windows {
 			return ret;
 		}
 
-		private function _onMainWindowDestroyed(arg:String = null):void {
+		private function _onMainWindowDestroyed(... ignore):void {
+			var wRecord : WindowRecord = _catalogue.lookup(_mainWindow);
+			wRecord.removeEventListener(WindowRecordEvent.BLOCKING, _onMainWindowBlocked);
+			wRecord.removeEventListener(WindowRecordEvent.UNBLOCKING, _onMainWindowUnblocked);
 			var all:Vector.<String> = availableWindows;
 			for (var i:int = 0; i < all.length; i++) {
 				var winUid : String = (all[i] as String);
 				if (winUid != _mainWindow) {
-					var win : WindowRecord = _catalogue.lookup (winUid);
-					win.unblock();
+					wRecord = _catalogue.lookup (winUid);
+					wRecord.unblock();
 					destroyWindow (winUid);
 				}
 			}
 			_mainWindow = null;
+		}
+
+		private function _onMainWindowBlocked (event : WindowRecordEvent) : void {
+			dispatchEvent(new WindowsManagerEvent(WindowsManagerEvent.MAIN_WINDOW_BLOCKED, null));
+		}
+
+		private function _onMainWindowUnblocked (event : WindowRecordEvent) : void {
+			dispatchEvent(new WindowsManagerEvent(WindowsManagerEvent.MAIN_WINDOW_UNBLOCKED, null));
 		}
 	}
 }

@@ -1,0 +1,1 @@
+Library that builds and manages windows for the benefit of multi-window AIR applications.

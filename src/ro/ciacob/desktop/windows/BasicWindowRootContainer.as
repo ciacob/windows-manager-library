@@ -1,12 +1,9 @@
 package ro.ciacob.desktop.windows {
-	import flash.display.Screen;
-	
+	import flash.display.Screen;	
 	import mx.containers.Canvas;
-	
-	import flashx.textLayout.container.ScrollPolicy;
-	
+	import mx.core.ScrollPolicy;
+
 	public class BasicWindowRootContainer extends Canvas implements IWindowContent {
-		
 		private var _delegate : WindowContentBehavior;
 		
 		public function BasicWindowRootContainer () {

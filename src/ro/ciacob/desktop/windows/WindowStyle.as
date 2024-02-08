@@ -11,45 +11,51 @@ package ro.ciacob.desktop.windows {
 		public static const WINDOW_BASE : int = 0;
 		
 		/**
-		 * Attempts to controll whether the new window will have a header, which usually includes (at least)
+		 * Attempts to control whether the new window will have a header, which usually includes (at least)
 		 * a title and a `close` button.
 		 */
 		public static const HEADER : int = 1;
 		
 		/**
-		 * Attempts to controll whether the new window will have a status bar.
+		 * Attempts to control whether the new window will have a status bar.
 		 */
 		public static const FOOTER : int = 2;
 		
 		/**
-		 * Attempts to controll whether the new window will show in the status bar.
+		 * Attempts to control whether the new window will show in the status bar.
 		 */
 		public static const TASKBAR : int = 4;
 		
 		/**
-		 * Attempts to controll whether the new window will be transparent.
+		 * Attempts to control whether the new window will be transparent.
 		 */
 		public static const TRANSPARENT : int = 16;
 		
 		/**
-		 * Attempts to controll whether the new window will be minimizable by the end-user.
+		 * Attempts to control whether the new window will be minimizable by the end-user.
 		 */
 		public static const MINIMIZE : int = 32;
 		
 		/**
-		 * Attempts to controll whether the new window will be maximizable by the end-user.
+		 * Attempts to control whether the new window will be maximizable by the end-user.
 		 */
 		public static const MAXIMIZE : int = 64;
 		
 		/**
-		 * Attempts to controll whether the new window will be resizable by the end-user.
+		 * Attempts to control whether the new window will be resizable by the end-user.
 		 */
 		public static const RESIZE : int = 128;
 		
 		/**
-		 * Attempts to controll whether the new window will lock itself to the top of the windows stack.
+		 * Attempts to control whether the new window will lock itself to the top of the windows stack.
 		 */
 		public static const TOP : int = 256;
+
+		/**
+		 * Attempts to control whether the new window will use the native chrome of the host operating system, rather
+		 * than its own custom chrome.
+		 */
+		public static const NATIVE : int = 512;
 		
 		//---------
 		// PRESETS
