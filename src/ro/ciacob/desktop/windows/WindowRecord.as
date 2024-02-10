@@ -667,7 +667,7 @@ package ro.ciacob.desktop.windows {
 		}
 
 		/**
-		 * Blocks "onself", that is, this very WindowRecord instance, together with its _windowBase and related
+		 * Blocks "oneself", that is, this very WindowRecord instance, together with its _windowBase and related
 		 * NativeWindow. The first child of the _windowBase component will become disabled, and no essential
 		 * operation (e.g., moving, resizing, some state changing) will be available anymore. Also, a WindowRecordEvent
 		 * is dispatched to let the rest of the world know about it.
@@ -757,7 +757,7 @@ package ro.ciacob.desktop.windows {
 			}
 		}
 
-		private function _onPreventDefault(event:Event):void {
+		private static function _onPreventDefault(event:Event):void {
 			event.preventDefault();
 		}
 		
@@ -768,7 +768,7 @@ package ro.ciacob.desktop.windows {
 		 * (2) Allows the window to be minimized to task bar, even when there is a modal that
 		 * blocks it.
 		 */
-		private function _onConditionalPreventDefault (event:NativeWindowDisplayStateEvent):void {
+		private static function _onConditionalPreventDefault (event:NativeWindowDisplayStateEvent):void {
 			if (event.beforeDisplayState == NativeWindowDisplayState.MINIMIZED && 
 				(event.afterDisplayState == NativeWindowDisplayState.NORMAL ||
 					event.afterDisplayState == NativeWindowDisplayState.MAXIMIZED)) {
@@ -812,7 +812,7 @@ package ro.ciacob.desktop.windows {
 			return rect;
 		}
 
-		private function _rectToPoint(rect:Rectangle):Point {
+		private static function _rectToPoint(rect:Rectangle):Point {
 			var p:Point = new Point;
 			p.x = rect.width;
 			p.y = rect.height;
@@ -863,7 +863,7 @@ package ro.ciacob.desktop.windows {
 		}
 
 		/**
-		 * Un-blocks "onself", that is, this very WindowRecord instance, together with its _windowBase and related
+		 * Un-blocks "oneself", that is, this very WindowRecord instance, together with its _windowBase and related
 		 * NativeWindow. The first child of the _windowBase component will become enabled again, and so will all window
 		 * essential operations (e.g., moving, resizing, state changing). Also, a WindowRecordEvent is dispatched
 		 * to let the rest of the world know about it.

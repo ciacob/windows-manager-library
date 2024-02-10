@@ -14,7 +14,7 @@ package ro.ciacob.desktop.windows {
 		public static const BEFORE_DESTROY:int = 2;
 
 		/**
-		 * The window has just been `blured` by the user, while previously `focused` (e.g., via a mouse click or keyboard equivalent on another window or the desktop).
+		 * The window has just been `blurred` by the user, while previously `focused` (e.g., via a mouse click or keyboard equivalent on another window or the desktop).
 		 */
 		public static const BLUR:int = 11;
 
@@ -24,7 +24,7 @@ package ro.ciacob.desktop.windows {
 		public static const DESTROY:int = 3;
 
 		/**
-		 * The window has just been `focused` by the user, while previously `blured` (e.g., via a mouse click or keyboard equivalent).
+		 * The window has just been `focused` by the user, while previously `blurred` (e.g., via a mouse click or keyboard equivalent).
 		 */
 		public static const FOCUS:int = 10;
 

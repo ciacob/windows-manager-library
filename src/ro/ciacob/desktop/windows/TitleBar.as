@@ -718,7 +718,7 @@ package ro.ciacob.desktop.windows
 		/**
 		 *  @private
 		 */
-		private function measureChromeText(textField:IUITextField):Rectangle
+		private static function measureChromeText(textField:IUITextField):Rectangle
 		{
 			var textWidth:Number = 20;
 			var textHeight:Number = 14;
@@ -781,7 +781,7 @@ package ro.ciacob.desktop.windows
 		 *  @private
 		 *  Used to swallow mousedown so bar is not draggable from buttons
 		 */
-		private function button_mouseDownHandler(event:MouseEvent):void
+		private static function button_mouseDownHandler(event:MouseEvent):void
 		{
 			event.stopPropagation();
 		}

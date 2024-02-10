@@ -1,10 +1,8 @@
 package ro.ciacob.desktop.windows {
-	import flash.geom.Point;
-	import flash.geom.Rectangle;
-	
-	import mx.core.IUIComponent;
+import flash.geom.Point;
+import flash.geom.Rectangle;
 
-	public interface IWindowsManager {
+public interface IWindowsManager {
 
 		/**
 		 * Returns a list with all windows that are currently available. Both visible and hidden windows are
@@ -21,7 +19,7 @@ package ro.ciacob.desktop.windows {
 		 * This may imply bringing the whole application in focus, should it have lost focus to a different
 		 * application or to the operating system. This task may fail on various reasons, such as the
 		 * operating system preventing applications from "stealing" focus to themselves. If the window is hidden
-		 * an attempt is made to issue a system notification instead - as if the `trigerWindowNotification()` method
+		 * an attempt is made to issue a system notification instead - as if the `triggerWindowNotification()` method
 		 *  was called.
 		 *
 		 * @param	uid
@@ -34,11 +32,11 @@ package ro.ciacob.desktop.windows {
 		 * Aligns a given "mobile" window with respect to a given "anchor" window. 
 		 * Both windows need to be visible and have their boundaries stabilized in order for this to work (i.e.,
 		 * aligning will not produce reliable results if one of the windows has just been shown for the first time).
-		 * IMPORTANT: will not work if any of the involved windows wasn't given explicit bounds BEFORE attempting
+		 * IMPORTANT: will likely not work if any of the involved windows wasn't given explicit bounds BEFORE attempting
 		 * alignment.
 		 * 
 		 * @param	mobileWindowUid
-		 * 			The UI of the window that will be moved;
+		 * 			The UID of the window that will be moved;
 		 * 
 		 * @param	anchorWindowUid
 		 * 			The UID of the window that will remain fixed;
@@ -52,6 +50,36 @@ package ro.ciacob.desktop.windows {
 		 * 			`0.5` will center the windows vertically. Optional, defaults to `0.5`.
 		 */
 		function alignWindows (mobileWindowUid : String, anchorWindowUid : String, xPercent : Number = 0.5, yPercent : Number = 0.5) : void;
+
+		/**
+		 * Aligns a given window with respect to a given screen.
+		 * The window needs to be visible and has its boundaries stabilized in order for this to work (i.e., aligning
+		 * will not produce reliable results if the window has just been shown for the first time.
+		 * IMPORTANT: will likely not work if the window wasn't given explicit bounds BEFORE attempting alignment.
+		 * @param	windowUid
+		 * 			The UID of the window that will be moved.
+		 *
+		 * @param	screenUid
+		 * 			The UID of the screen (as returned by `ScreenUtils.getScreensInfo`) to align the window to. Only
+		 * 			the visible bounds of the screen will be used, e.g., excluding the dock and menu on macOS.
+		 *
+		 * @param    xPercent
+		 *            A Number from 0 to 1 representing the horizontal offset to apply, e.g.,
+		 *            `0.5` will center the window horizontally. Optional, defaults to `0.5`.
+		 *
+		 * @param    yPercent
+		 *            A Number from 0 to 1 representing the vertical offset to apply, e.g.,
+		 *            `0.5` will center the window vertically. Optional, defaults to `0.5`.
+		 *
+		 * @return	Returns `true` if given `screenUid` was successfully resolved to a screen, and given window will
+		 * 			aligned there. Returns `false` if no screen could be identified for given `screenUid`, and the
+		 * 			window will aligned to the main screen instead.
+		 *
+		 * 	        NOTE: does nothing if either `windowUid` does not resolve to a window, or there appears to be
+		 * 	        no screen available (not even the "main" screen).
+		 */
+		function alignWindowToScreen (windowUid : String, screenUid : String, xPercent: Number = 0.5,
+									  yPercent: Number = 0.5) : Boolean;
 
 		/**
 		 * Builds a new window, without showing it on screen. The newly built window will hold the given
@@ -95,7 +123,7 @@ package ro.ciacob.desktop.windows {
 		 * 			child of another window. When two windows have a child-parent relationship, the child will show
 		 * 			above the parent, will get hidden and shown along with its parent, and will close the moment the parent
 		 * 			closes. Parenting on modal windows is permitted, as long as the parent is itself modal and currently
-		 * 			childless. Since the parent will be blocked by its modal child, it will not be able to controll it in 
+		 * 			childless. Since the parent will be blocked by its modal child, it will not be able to control it in
 		 * 			the way described above.
 		 * 
 		 * 			A window created as a child stays that way until it is destroyed.
@@ -121,7 +149,7 @@ package ro.ciacob.desktop.windows {
 		/**
 		 * Attempts to reclaim any system resources currently linked to the window with the given uid, and
 		 * makes the window unavailable for future uses. Destroying the main window automatically destroys all other windows,
-		 * effectivelly leaving your application windowless, which may or may not close it, depending on its
+		 * effectively leaving your application windowless, which may or may not close it, depending on its
 		 * `autoExit` setting.
 		 *
 		 * You should only destroy a window when you no longer need it, as both creating and destroying
@@ -137,9 +165,12 @@ package ro.ciacob.desktop.windows {
 		/**
 		 * Tests whether given style was set on the given window at creation time.
 		 *
-		 * @param	The uid of a window. If it does not resolve to a window, or the window it resolves to has
+		 * @param	uid
+		 * 			The uid of a window. If it does not resolve to a window, or the window it resolves to has
 		 * 			been destroyed, an exception will be thrown.
-		 * @style	The style whose existence is to be tested. This is a complex bitmask obtained by OR-ing
+		 *
+		 * @param	style
+		 * 			The style whose existence is to be tested. This is a complex bitmask obtained by OR-ing
 		 * 			together (combining with the bitwise OR operator) constant values from the WindowStyle
 		 * 			class.
 		 *
@@ -195,8 +226,8 @@ package ro.ciacob.desktop.windows {
 		 * Tests the window with the given uid as being visible, i.e., not being minimized.
 		 *
 		 * NOTE: In other implementations out there, there is also a `isMinimized()` method or similar. Our
-		 * implementaion DOES NOT take this approach; instead it considers all minimized windows as being hidden and
-		 * viceversa.
+		 * implementation DOES NOT take this approach; instead it considers all minimized windows as being hidden and
+		 * vice-versa.
 		 *
 		 * @param	uid
 		 * 			The uid to be tested. If it does not resolve to a window, or the window it resolves to has
@@ -220,7 +251,7 @@ package ro.ciacob.desktop.windows {
 		function get mainWindow():String;
 
 		/**
-		 * Provides external code with an oportunity to hook into a window's asynchronous activities that weren't
+		 * Provides external code with an opportunity to hook into a window's asynchronous activities that weren't
 		 * directed by the windows manager, such as a window closing itself in response to user clicking its `x`
 		 * button.
 		 *
@@ -324,7 +355,7 @@ package ro.ciacob.desktop.windows {
 		 *
 		 * NOTE: In other implementations out there, there is also a `unMinimize()`, or `restore()` method or similar.
 		 * Our implementation DOES NOT take this approach; instead it considers all minimized windows as being hidden
-		 * and viceversa - therefore, making a window visible will bring it back to its previous visible state
+		 * and vice-versa - therefore, making a window visible will bring it back to its previous visible state
 		 * (that is, normal or maximized).
 		 *
 		 * @param	uid
@@ -371,14 +402,16 @@ package ro.ciacob.desktop.windows {
 
 		/**
 		 * Sets the position and size of the window pointed to by the given uid. If you don't call this method,
-		 * the window will attempt to measure and accomodate the content's size. This yelds most predictable
+		 * the window will attempt to measure and accommodate the content's size. This yields most predictable
 		 * results when the content has been given an explicit size.
 		 *
 		 * @param	uid
 		 * 			The uid of a window. If it does not resolve to a window, or the window it resolves to has
 		 * 			been destroyed, an exception will be thrown.
-		 * @bounds	bounds
+		 *
+		 * @param	bounds
 		 * 			The new boundaries, in desktop absolute coordinates, that must be applied to the window.
+		 *
 		 * @param	constraintToScreen
 		 * 			Optional. If set, will adjust the given boundaries so that the window will stay within its
 		 * 			current screen's boundary. Defaults to false.

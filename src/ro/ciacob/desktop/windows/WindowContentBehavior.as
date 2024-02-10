@@ -1,13 +1,13 @@
 package ro.ciacob.desktop.windows {
-	import flash.display.Screen;
-	import flash.geom.Point;
-	import flash.geom.Rectangle;
-	
-	import mx.core.UIComponent;
-	
-	import ro.ciacob.utils.ScreenUtils;
+import flash.display.Screen;
+import flash.geom.Point;
+import flash.geom.Rectangle;
 
-	/**
+import mx.core.UIComponent;
+
+import ro.ciacob.utils.ScreenUtils;
+
+/**
 	 * Class to be composed into all IWindowContent implementors. Uses `WindowManager` as the `IWindowManager` implementor.
 	 * @see IWindowContent
 	 */
@@ -28,7 +28,7 @@ package ro.ciacob.desktop.windows {
 			return null;
 		}
 
-		public function get homeScreen () : flash.display.Screen {
+		public function get homeScreen () : Screen {
 			var uid : String = windowUid;
 			if (uid != null) {
 				var bounds : Rectangle = _windowsManager.retrieveWindowBounds (uid);
@@ -61,7 +61,7 @@ package ro.ciacob.desktop.windows {
 		public function get currentScreensX () : Number {
 			var uid : String = windowUid;
 			if (uid != null) {
-				var currScreen : flash.display.Screen = homeScreen;
+				var currScreen : Screen = homeScreen;
 				if (currScreen != null) {
 					var winBounds : Rectangle = _windowsManager.retrieveWindowBounds (uid);
 					var screenBounds : Rectangle = homeScreen.bounds;
@@ -74,7 +74,7 @@ package ro.ciacob.desktop.windows {
 		public function get currentScreensY () : Number {
 			var uid : String = windowUid;
 			if (uid != null) {
-				var currScreen : flash.display.Screen = homeScreen;
+				var currScreen : Screen = homeScreen;
 				if (currScreen != null) {
 					var winBounds : Rectangle = _windowsManager.retrieveWindowBounds (uid);
 					var screenBounds : Rectangle = homeScreen.bounds;

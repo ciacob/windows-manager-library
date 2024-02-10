@@ -10,8 +10,6 @@ package ro.ciacob.desktop.windows {
 		 */
 		public function WindowsCatalogue () : void {}
 
-		private var _currentBlocker:String;
-
 		private var _records:Object = {};
 
 		public function add(window:Window, uid:String, style:int, counter:int):void {
