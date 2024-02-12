@@ -621,10 +621,16 @@ package ro.ciacob.desktop.windows {
 					nWin.x = _normalStateBounds.x;
 					nWin.y = _normalStateBounds.y;
 					if (requiredW > 0) {
-						_windowBase.width = requiredW;
+						nWin.width = requiredW;
+						if (_windowBase.stage) {
+							_windowBase.width = _windowBase.stage.stageWidth;
+						}
 					}
 					if (requiredH > 0) {
-						_windowBase.height = requiredH;
+						nWin.height = requiredH;
+						if (_windowBase.stage) {
+							_windowBase.height = _windowBase.stage.stageHeight;
+						}
 					}
 				}
 			}
