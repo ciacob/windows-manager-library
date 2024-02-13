@@ -137,19 +137,21 @@ public class WindowsManager extends EventDispatcher implements IWindowsManager {
      * @see IWindowsManager.alignWindowToScreen
      */
     public function alignWindowToScreen(windowUid:String, screenUid:String,
-                                        xPercent:Number = 0.5, yPercent:Number = 0.5):Boolean {
+                                        xPercent:Number = 0.5, yPercent:Number = 0.5,
+                                        logicalBounds : Rectangle = null):Boolean {
         var alignsToRequestedScreen:Boolean = true;
         var allScreensInfo:Array = ScreenUtils.getScreensInfo();
         var anchorScreenInfo:Object = allScreensInfo.filter(function (item:Object, ...ignore):Boolean {
             return (item.uid == screenUid);
         })[0];
-        if (!allScreensInfo) {
+        if (!anchorScreenInfo) {
             anchorScreenInfo = allScreensInfo[0] as Object;
             alignsToRequestedScreen = false;
         }
         if (allScreensInfo && isWindowAvailable(windowUid) && isWindowVisible(windowUid)) {
             var performAlignment:Function = function ():void {
-                var windowBounds:Rectangle = retrieveWindowBounds(windowUid);
+                var windowBounds:Rectangle = (logicalBounds && !logicalBounds.isEmpty())?
+                        logicalBounds : retrieveWindowBounds(windowUid);
                 var alignedBounds:Rectangle = new Rectangle(
                         anchorScreenInfo.x + (anchorScreenInfo.width - windowBounds.width) * xPercent,
                         anchorScreenInfo.y + (anchorScreenInfo.height - windowBounds.height) * yPercent,
@@ -489,14 +491,6 @@ public class WindowsManager extends EventDispatcher implements IWindowsManager {
         return ret;
     }
 
-    private function _onWindowReady(event:WindowRecordEvent):void {
-        var windowRecord:WindowRecord = (event.target as WindowRecord);
-        windowRecord.removeEventListener(WindowRecordEvent.WINDOW_READY, _onWindowReady);
-        if (event.windowUid == _mainWindow) {
-            dispatchEvent(new WindowsManagerEvent(WindowsManagerEvent.MAIN_WINDOW_AVAILABLE, event.nativeWindow));
-        }
-    }
-
     private function _assertNotDestroyed(uid:String):void {
         if (_catalogue.lookup(uid).isDestroyed) {
             throw(new Error(WINDOW_IS_DESTROYED));
@@ -534,6 +528,14 @@ public class WindowsManager extends EventDispatcher implements IWindowsManager {
             }
         }
         return ret;
+    }
+
+    private function _onWindowReady(event:WindowRecordEvent):void {
+        var windowRecord:WindowRecord = (event.target as WindowRecord);
+        windowRecord.removeEventListener(WindowRecordEvent.WINDOW_READY, _onWindowReady);
+        if (event.windowUid == _mainWindow) {
+            dispatchEvent(new WindowsManagerEvent(WindowsManagerEvent.MAIN_WINDOW_AVAILABLE, event.nativeWindow));
+        }
     }
 
     private function _onMainWindowDestroyed(...ignore):void {

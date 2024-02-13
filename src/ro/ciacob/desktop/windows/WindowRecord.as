@@ -632,7 +632,7 @@ package ro.ciacob.desktop.windows {
 							_windowBase.height = _windowBase.stage.stageHeight;
 						}
 					}
-				}
+			}
 			}
 		}
 

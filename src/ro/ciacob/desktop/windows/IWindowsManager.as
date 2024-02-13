@@ -71,6 +71,11 @@ public interface IWindowsManager {
 		 *            A Number from 0 to 1 representing the vertical offset to apply, e.g.,
 		 *            `0.5` will center the window vertically. Optional, defaults to `0.5`.
 		 *
+		 * @param	logicalBounds
+		 *			Bounds to be substituted for the actual, retrieved bounds. Useful for situations
+		 *			where the bounds of the window being aligned cannot be reliably determined (e.g.,
+		 *			if the window being aligned is also being resized, at the same time).
+		 *
 		 * @return	Returns `true` if given `screenUid` was successfully resolved to a screen, and given window will
 		 * 			aligned there. Returns `false` if no screen could be identified for given `screenUid`, and the
 		 * 			window will aligned to the main screen instead.
@@ -79,7 +84,7 @@ public interface IWindowsManager {
 		 * 	        no screen available (not even the "main" screen).
 		 */
 		function alignWindowToScreen (windowUid : String, screenUid : String, xPercent: Number = 0.5,
-									  yPercent: Number = 0.5) : Boolean;
+						yPercent: Number = 0.5, logicalBounds : Rectangle = null) : Boolean;
 
 		/**
 		 * Builds a new window, without showing it on screen. The newly built window will hold the given
